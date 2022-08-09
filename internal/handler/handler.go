@@ -33,7 +33,6 @@ func (h *Handler) Handle(conn net.Conn) error {
 	defer h.diff.ConnOver()
 	defer conn.Close()
 	diff := h.diff.Difficulty()
-	time.Sleep(time.Second)
 	nonce := []byte(conn.RemoteAddr().String() + strconv.Itoa(int(time.Now().UnixNano())))
 	err = gob.NewEncoder(conn).Encode(protocol.Task{
 		Difficulty: diff,
