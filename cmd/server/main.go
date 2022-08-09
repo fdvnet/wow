@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"wow/internal/difficulty"
@@ -32,6 +33,7 @@ func main() {
 		log.Info().Msgf("got signal %s", (<-sigCh).String())
 		cancel()
 	}()
+	wg := sync.WaitGroup{}
 	for {
 		select {
 		case <-ctx.Done():
@@ -45,11 +47,14 @@ func main() {
 			}
 
 			go func() {
+				wg.Add(1)
 				e := h.Handle(conn)
+				wg.Done()
 				if e != nil {
 					log.Error().Err(e).Msg("handle")
 				}
 			}()
 		}
 	}
+	wg.Wait()
 }
