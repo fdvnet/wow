@@ -2,10 +2,9 @@ package pow
 
 import (
 	"crypto/sha256"
+	"errors"
 	"strconv"
 	"time"
-
-	"github.com/rs/zerolog/log"
 )
 
 const timeout = time.Minute
@@ -53,7 +52,11 @@ func IsValid(nonce, solution []byte, zeroCount int) bool {
 	return isValid(zeroCount, hash)
 }
 
-func Calculate(nonce []byte, zeroCount int) []byte {
+var errTimeOver = errors.New("time for calculation is over")
+
+// Calculate
+// it is possible to make parallel calculation using goroutines
+func Calculate(nonce []byte, zeroCount int) ([]byte, error) {
 	var sol []byte
 	hasher := sha256.New()
 	tc := time.NewTimer(timeout)
@@ -62,8 +65,7 @@ func Calculate(nonce []byte, zeroCount int) []byte {
 		i++
 		select {
 		case <-tc.C:
-			log.Warn().Msg("time for calculation is over")
-			return sol
+			return nil, errTimeOver
 		default:
 			hasher.Reset()
 			sol = []byte(strconv.Itoa(i))
@@ -71,7 +73,7 @@ func Calculate(nonce []byte, zeroCount int) []byte {
 			hasher.Write(nonce)
 			hash := hasher.Sum(nil)
 			if isValid(zeroCount, hash) {
-				return sol
+				return sol, nil
 			}
 		}
 	}

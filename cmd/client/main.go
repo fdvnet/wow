@@ -35,7 +35,10 @@ func main() {
 		panic(err)
 	}
 
-	sol := pow.Calculate(task.Nonce, task.Difficulty)
+	sol, err := pow.Calculate(task.Nonce, task.Difficulty)
+	if err != nil {
+		panic(err)
+	}
 	err = gob.NewEncoder(conn).Encode(protocol.Solution{
 		Answer: sol,
 	})
